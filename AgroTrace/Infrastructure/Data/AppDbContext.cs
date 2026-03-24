@@ -182,6 +182,36 @@ namespace AgroTrace.Infrastructure.Data
 
             });
 
+            modelBuilder.Entity<EstadoAnimal>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nombre)
+                .IsRequired()
+                .HasMaxLength(50);
+                entity.HasIndex(e => e.Nombre)
+                .IsUnique();
+                entity.HasMany(e => e.Animales)
+                 .WithOne(a => a.EstadoAnimal)
+                 .HasForeignKey(a => a.EstadoAnimalId)
+                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Raza>(entity =>
+            {
+                entity.HasKey (r => r.Id);
+                entity.Property(r => r.Nombre)
+                .IsRequired()
+                .HasMaxLength(50);
+                entity.HasOne(r => r.TipoAnimal)
+                .WithMany(t => t.Razas)
+                .HasForeignKey(r => r.TipoAnimalId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            });
+
+
+
+
 
 
         }
