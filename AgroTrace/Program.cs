@@ -1,3 +1,4 @@
+using AgroTrace.Helpers;
 using AgroTrace.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<PasswordService>();
 
 var app = builder.Build();
 
