@@ -9,6 +9,6 @@
         public int FincaId { get; set; }
         public Finca Finca { get; set; }
 
-        public string? Descripcion { get; set; }
+        public string Descripcion { get; set; }
     }
 }

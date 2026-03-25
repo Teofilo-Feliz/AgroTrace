@@ -40,6 +40,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Usuario>(entity =>
             {
+                entity.ToTable("Usuarios");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Nombre)
@@ -76,6 +77,9 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Finca>(entity =>
             {
+                entity.ToTable("Fincas");
+                entity.HasIndex(e => e.UsuarioPropietarioId);
+                entity.HasKey(e => e.Id);
                 entity.HasOne(f => f.UsuarioPropietario)
                .WithMany(u => u.Fincas)
                .HasForeignKey(f => f.UsuarioPropietarioId)
@@ -84,8 +88,12 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Animal>(entity =>
            {
+               entity.ToTable("Animales");
                entity.HasKey(e => e.Id);
-
+               entity.HasIndex(e => e.FincaId);
+               entity.HasIndex(e => e.TipoAnimalId);
+               entity.HasIndex(e => e.RazaId);
+               entity.HasIndex(e => e.EstadoAnimalId);
                entity.Property(e => e.Codigo)
                .IsRequired()
                .HasMaxLength(100);
@@ -136,11 +144,14 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Produccion>(entity =>
             {
+                entity.ToTable("Producciones");
+                entity.HasIndex(e => e.FincaId);
+                entity.HasIndex(e => e.TipoProduccionId);
                 entity.HasOne(p => p.Finca)
-                .WithMany()
+                .WithMany(p => p.Producciones)
                 .HasForeignKey(p => p.FincaId)
                 .OnDelete(DeleteBehavior.Restrict);
-
+                entity.HasIndex(p => new { p.FincaId, p.Fecha });
                 entity.HasOne(p => p.TipoProduccion)
                     .WithMany()
                     .HasForeignKey(p => p.TipoProduccionId)
@@ -149,10 +160,16 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<ProduccionDetalle>(entity =>
             {
+                entity.ToTable("ProduccionDetalles");
+                entity.HasIndex(e => e.ProduccionId);
+                entity.HasIndex(e => e.AnimalId);
+                entity.Property(p => p.Cantidad)
+                .HasPrecision(10, 2);
                 entity.HasOne(d => d.Produccion)
                 .WithMany(p => p.Detalles)
                 .HasForeignKey(d => d.ProduccionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
 
                 entity.HasOne(d => d.Animal)
                     .WithMany(f => f.ProduccionDetalles)
@@ -163,18 +180,26 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Gasto>(entity =>
             {
+                entity.ToTable("Gastos");
+                entity.HasIndex(e => e.FincaId);
+                entity.HasIndex(e => e.TipoGastoId);
                 entity.HasOne(g => g.TipoGasto)
                  .WithMany(g => g.Gastos)
                  .HasForeignKey(g => g.TipoGastoId)
                  .OnDelete(DeleteBehavior.Restrict);
-
+                entity.HasIndex(g => new { g.FincaId, g.Fecha });
                 entity.HasOne(g => g.Finca)
                     .WithMany(g => g.Gastos)
-                    .HasForeignKey(g => g.FincaId);
+                    .HasForeignKey(g => g.FincaId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Tratamiento>(entity =>
             {
+                entity.ToTable("Tratamientos");
+                entity.HasIndex(e => e.AnimalId);
+                entity.Property(t => t.Costo)
+                .HasPrecision(10,2);
                 entity.HasOne(t => t.Animal)
                  .WithMany(t => t.Tratamientos)
                  .HasForeignKey(t => t.AnimalId)
@@ -198,6 +223,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Raza>(entity =>
             {
+                entity.ToTable("Razas");
                 entity.HasKey (r => r.Id);
                 entity.Property(r => r.Nombre)
                 .IsRequired()
@@ -208,6 +234,96 @@ namespace AgroTrace.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             });
+
+            modelBuilder.Entity<Ingreso>(entity =>
+            {
+                entity.HasIndex(e => e.FincaId);
+                entity.ToTable("Ingresos");
+                entity.HasKey(r => r.Id);
+                entity.Property (r => r.Monto)
+                .IsRequired()
+                .HasPrecision(10,2);
+                entity.Property(r => r.Fecha)
+                .IsRequired();
+                entity.HasIndex(i => new { i.FincaId, i.Fecha });
+                entity.Property (r => r.Descripcion)
+                .IsRequired()
+                .HasMaxLength(255);
+                entity.HasOne(i => i.Finca)
+               .WithMany(f => f.Ingresos)
+               .HasForeignKey(i => i.FincaId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            });
+
+            modelBuilder.Entity<Rol>(entity =>
+            {
+                entity.ToTable("Roles");
+                entity.HasKey(r => r.Id);
+                entity.Property(r => r.Nombre) 
+                .IsRequired()
+                .HasMaxLength (50);
+                entity.HasIndex(r => r.Nombre)
+                .IsUnique();
+                entity.Property(r => r.Descripcion)
+                .HasMaxLength(255);
+
+
+            });
+
+            modelBuilder.Entity<TipoAnimal>(entity =>
+            {
+                entity.ToTable("TiposAnimales");
+                entity.HasKey(r => r.Id);
+                entity.Property(r => r.Nombre)
+                .IsRequired()
+                .HasMaxLength(50);
+                entity.HasIndex(r => r.Nombre)
+                .IsUnique();
+                entity.HasMany(t => t.Animales)
+                .WithOne(a => a.TipoAnimal)
+                .HasForeignKey(a => a.TipoAnimalId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            });
+
+            modelBuilder.Entity<TipoGasto>(entity =>
+            {
+                entity.ToTable("TiposGastos");
+                entity.HasKey(R => R.Id);
+                entity.Property(r => r.Nombre)
+                .IsRequired()
+                .HasMaxLength(50);
+                entity.HasIndex (r => r.Nombre)
+                .IsUnique();
+                entity.HasMany(t => t.Gastos)
+                .WithOne(g => g.TipoGasto)
+                .HasForeignKey(g => g.TipoGastoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            });
+
+            modelBuilder.Entity<TipoProduccion>(entity =>
+            {
+                entity.ToTable("TiposProduciones");
+                entity.HasKey (r => r.Id);
+                entity.Property(r => r.Nombre)
+                .IsRequired()
+                .HasMaxLength(50);
+                entity.HasIndex(r => r.Nombre)
+                .IsUnique();
+                entity.HasMany(t => t.Producciones)
+                .WithOne(p => p.TipoProduccion)
+                .HasForeignKey(p => p.TipoProduccionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+
+
+
+          
+
 
 
 

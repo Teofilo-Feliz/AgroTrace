@@ -14,5 +14,6 @@
         public ICollection<Animal> Animales { get; set; } = new List<Animal>();
         public ICollection<Produccion> Producciones { get; set; } = new List<Produccion>();
         public ICollection<Gasto> Gastos { get; set; } = new List<Gasto>();
+        public ICollection<Ingreso> Ingresos { get; set; }
     }
 }
