@@ -22,7 +22,7 @@ namespace AgroTrace.Helpers
             return _hasher.HashPassword(usuario, password);
         }
 
-        public bool VerifyPassword(Usuario usuario, string password, string hash)
+        public bool VerifyPassword(Usuario usuario, string password)
         {
             if (usuario == null)
                 throw new ArgumentNullException(nameof(usuario));
@@ -30,10 +30,14 @@ namespace AgroTrace.Helpers
             if (string.IsNullOrWhiteSpace(password))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(hash))
-                throw new ArgumentException("Hash inválido");
+            if (string.IsNullOrWhiteSpace(usuario.PasswordHash))
+                throw new Exception("El usuario no tiene contraseña válida");
 
-            var result = _hasher.VerifyHashedPassword(usuario, hash, password);
+            var result = _hasher.VerifyHashedPassword(
+                usuario,
+                usuario.PasswordHash,
+                password
+            );
 
             return result == PasswordVerificationResult.Success ||
                    result == PasswordVerificationResult.SuccessRehashNeeded;

@@ -34,6 +34,9 @@ namespace AgroTrace.Infrastructure.Data
         //Salud
         public DbSet<Tratamiento> Tratamientos { get; set; }
 
+        //Refrescar Token
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -318,11 +321,19 @@ namespace AgroTrace.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
             });
 
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasOne(e => e.Usuario)
+                    .WithMany(u => u.RefreshTokens)
+                    .HasForeignKey(e => e.UsuarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
 
 
 
-          
+
+
 
 
 

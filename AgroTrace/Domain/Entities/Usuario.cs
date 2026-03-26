@@ -18,5 +18,6 @@ namespace AgroTrace.Domain.Entities
         public Rol Rol { get; set; }
 
         public ICollection<Finca> Fincas { get; set; } = new List<Finca>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
