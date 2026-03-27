@@ -9,10 +9,24 @@
 
         public List<string> Errors { get; set; } = new List<string>(0);
     }
+
+
     public class Response<T> : Response
     {
         public T Data { get; set; }
+        public IEnumerable<T> DataList { get; set; }
+
+        public  Response<T> Fail<T>(string message)
+        {
+            return new Response<T>
+            {
+                Successful = false,
+                Message = message
+            };
+        }
     }
+
+
 }
 
 

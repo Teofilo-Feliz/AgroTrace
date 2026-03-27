@@ -23,6 +23,7 @@ builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JWTService>();
 builder.Services.AddScoped<IUsuario, UsuarioService>();
+builder.Services.AddScoped<ITokenGenerator, RefreshTokenService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new Exception("JWT Key no configurada");

@@ -4,6 +4,7 @@ using AgroTrace.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgroTrace.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327203105_AgregarEsquemas")]
+    partial class AgregarEsquemas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,7 +96,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Codigo", "FincaId")
                         .IsUnique();
 
-                    b.ToTable("Animales", "Ganaderia");
+                    b.ToTable("Animales", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.EstadoAnimal", b =>
@@ -130,7 +133,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Nombre")
                         .IsUnique();
 
-                    b.ToTable("EstadoAnimales", "Ganaderia");
+                    b.ToTable("EstadoAnimales");
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Finca", b =>
@@ -175,7 +178,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("UsuarioPropietarioId");
 
-                    b.ToTable("Fincas", "Ganaderia");
+                    b.ToTable("Fincas", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Gasto", b =>
@@ -225,7 +228,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("FincaId", "Fecha");
 
-                    b.ToTable("Gastos", "Finanzas");
+                    b.ToTable("Gastos", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Ingreso", b =>
@@ -273,7 +276,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("FincaId", "Fecha");
 
-                    b.ToTable("Ingresos", "Finanzas");
+                    b.ToTable("Ingresos", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Produccion", b =>
@@ -317,7 +320,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("FincaId", "Fecha");
 
-                    b.ToTable("Producciones", "Produccion");
+                    b.ToTable("Producciones", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.ProduccionDetalle", b =>
@@ -360,7 +363,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("ProduccionId");
 
-                    b.ToTable("ProduccionDetalles", "Produccion");
+                    b.ToTable("ProduccionDetalles", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Raza", b =>
@@ -399,7 +402,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("TipoAnimalId");
 
-                    b.ToTable("Razas", "Ganaderia");
+                    b.ToTable("Razas", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.RefreshToken", b =>
@@ -430,7 +433,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("RefreshToken", "Seguridad");
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Rol", b =>
@@ -471,7 +474,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Nombre")
                         .IsUnique();
 
-                    b.ToTable("Roles", "Seguridad");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.TipoAnimal", b =>
@@ -508,7 +511,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Nombre")
                         .IsUnique();
 
-                    b.ToTable("TiposAnimales", "Ganaderia");
+                    b.ToTable("TiposAnimales", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.TipoGasto", b =>
@@ -545,7 +548,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Nombre")
                         .IsUnique();
 
-                    b.ToTable("TiposGastos", "Finanzas");
+                    b.ToTable("TiposGastos", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.TipoProduccion", b =>
@@ -582,7 +585,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Nombre")
                         .IsUnique();
 
-                    b.ToTable("TiposProduciones", "Produccion");
+                    b.ToTable("TiposProduciones", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Tratamiento", b =>
@@ -631,7 +634,7 @@ namespace AgroTrace.Migrations
 
                     b.HasIndex("AnimalId");
 
-                    b.ToTable("Tratamientos", "Sanidad");
+                    b.ToTable("Tratamientos", (string)null);
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Usuario", b =>
@@ -696,7 +699,7 @@ namespace AgroTrace.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Usuarios", "Seguridad");
+                    b.ToTable("Usuarios", "usuarios");
                 });
 
             modelBuilder.Entity("AgroTrace.Domain.Entities.Animal", b =>

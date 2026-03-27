@@ -8,33 +8,21 @@ namespace AgroTrace.Infrastructure.Data
         : base(options)
         {
         }
-        //Seguridad
+        
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
-
-        //Finca
         public DbSet<Finca> Fincas { get; set; }
-
-        //Ganado
         public DbSet<Animal> Animales { get; set; }
         public DbSet<TipoAnimal> TipoAnimales { get; set; }
         public DbSet<Raza> Razas { get; set; }
         public DbSet<EstadoAnimal> EstadoAnimales { get; set; }
-
-        //Producción
         public DbSet<Produccion> Producciones { get; set; }
         public DbSet<ProduccionDetalle> ProduccionDetalles { get; set; }
         public DbSet<TipoProduccion> TipoProducciones { get; set; }
-
-        //Finanzas
         public DbSet<Gasto> Gastos { get; set; }
         public DbSet<TipoGasto> TipoGastos { get; set; }
         public DbSet<Ingreso> Ingresos { get; set; }
-
-        //Salud
         public DbSet<Tratamiento> Tratamientos { get; set; }
-
-        //Refrescar Token
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,7 +31,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Usuario>(entity =>
             {
-                entity.ToTable("Usuarios");
+                entity.ToTable("Usuarios", "Seguridad");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Nombre)
@@ -80,7 +68,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Finca>(entity =>
             {
-                entity.ToTable("Fincas");
+                entity.ToTable("Fincas", "Ganaderia");
                 entity.HasIndex(e => e.UsuarioPropietarioId);
                 entity.HasKey(e => e.Id);
                 entity.HasOne(f => f.UsuarioPropietario)
@@ -91,7 +79,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Animal>(entity =>
            {
-               entity.ToTable("Animales");
+               entity.ToTable("Animales", "Ganaderia");
                entity.HasKey(e => e.Id);
                entity.HasIndex(e => e.FincaId);
                entity.HasIndex(e => e.TipoAnimalId);
@@ -147,7 +135,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Produccion>(entity =>
             {
-                entity.ToTable("Producciones");
+                entity.ToTable("Producciones", "Produccion");
                 entity.HasIndex(e => e.FincaId);
                 entity.HasIndex(e => e.TipoProduccionId);
                 entity.HasOne(p => p.Finca)
@@ -163,7 +151,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<ProduccionDetalle>(entity =>
             {
-                entity.ToTable("ProduccionDetalles");
+                entity.ToTable("ProduccionDetalles", "Produccion");
                 entity.HasIndex(e => e.ProduccionId);
                 entity.HasIndex(e => e.AnimalId);
                 entity.Property(p => p.Cantidad)
@@ -183,7 +171,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Gasto>(entity =>
             {
-                entity.ToTable("Gastos");
+                entity.ToTable("Gastos", "Finanzas");
                 entity.HasIndex(e => e.FincaId);
                 entity.HasIndex(e => e.TipoGastoId);
                 entity.HasOne(g => g.TipoGasto)
@@ -199,7 +187,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Tratamiento>(entity =>
             {
-                entity.ToTable("Tratamientos");
+                entity.ToTable("Tratamientos", "Sanidad");
                 entity.HasIndex(e => e.AnimalId);
                 entity.Property(t => t.Costo)
                 .HasPrecision(10,2);
@@ -212,6 +200,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<EstadoAnimal>(entity =>
             {
+                entity.ToTable("EstadoAnimales", "Ganaderia");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nombre)
                 .IsRequired()
@@ -226,7 +215,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Raza>(entity =>
             {
-                entity.ToTable("Razas");
+                entity.ToTable("Razas", "Ganaderia");
                 entity.HasKey (r => r.Id);
                 entity.Property(r => r.Nombre)
                 .IsRequired()
@@ -240,8 +229,8 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Ingreso>(entity =>
             {
+                entity.ToTable("Ingresos", "Finanzas");
                 entity.HasIndex(e => e.FincaId);
-                entity.ToTable("Ingresos");
                 entity.HasKey(r => r.Id);
                 entity.Property (r => r.Monto)
                 .IsRequired()
@@ -261,7 +250,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<Rol>(entity =>
             {
-                entity.ToTable("Roles");
+                entity.ToTable("Roles", "Seguridad");
                 entity.HasKey(r => r.Id);
                 entity.Property(r => r.Nombre) 
                 .IsRequired()
@@ -276,7 +265,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<TipoAnimal>(entity =>
             {
-                entity.ToTable("TiposAnimales");
+                entity.ToTable("TiposAnimales", "Ganaderia");
                 entity.HasKey(r => r.Id);
                 entity.Property(r => r.Nombre)
                 .IsRequired()
@@ -292,7 +281,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<TipoGasto>(entity =>
             {
-                entity.ToTable("TiposGastos");
+                entity.ToTable("TiposGastos", "Finanzas");
                 entity.HasKey(R => R.Id);
                 entity.Property(r => r.Nombre)
                 .IsRequired()
@@ -308,7 +297,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<TipoProduccion>(entity =>
             {
-                entity.ToTable("TiposProduciones");
+                entity.ToTable("TiposProduciones", "Produccion");
                 entity.HasKey (r => r.Id);
                 entity.Property(r => r.Nombre)
                 .IsRequired()
@@ -323,6 +312,7 @@ namespace AgroTrace.Infrastructure.Data
 
             modelBuilder.Entity<RefreshToken>(entity =>
             {
+                entity.ToTable("RefreshToken", "Seguridad");
                 entity.HasOne(e => e.Usuario)
                     .WithMany(u => u.RefreshTokens)
                     .HasForeignKey(e => e.UsuarioId)

@@ -4,6 +4,12 @@ namespace AgroTrace.Service
 {
     public interface IUsuario
     {
-        Task<Response<LoginResponse>> LoguearUsuario (string username, string password);
+        Task<Response<UsuariosResponse>> ObtenerUsuarios(UsuarioFiltro usuario);
+        Task<Response<UsuariosResponse>> ObtenerUsuariosId(int id);
+        Task<Response<AgregarUsuarioResponse>> AgregarUsuario(AgregarUsuarioRequest usuario);
+
+
+
+        Task<Response<LoginResponse>> LoguearUsuario(string username, string password);
     }
 }
