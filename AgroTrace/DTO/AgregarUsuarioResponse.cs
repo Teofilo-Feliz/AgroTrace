@@ -9,6 +9,8 @@
         public string Email { get; set; }
         public int RolId { get; set; }
         public DateTime FechaCreacion { get; set; }
+        public string UsuarioCreacion { get; set; }
+
         public bool Activo { get; set; }
 
 

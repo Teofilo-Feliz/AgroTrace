@@ -136,8 +136,12 @@ namespace AgroTrace.Service
             {
                 response.Successful = false;
                 response.Message = "Error al obtener el usuario";
-                response.Errors.Add(ex.Message);
-            
+               
+                if (ex.InnerException != null)
+                    response.Errors.Add(ex.InnerException.Message);
+                else
+                    response.Errors.Add(ex.Message);
+
             }
             return response;
         }
@@ -207,6 +211,7 @@ namespace AgroTrace.Service
                     PasswordHash = usuario.PasswordHash,
                     RolId = usuario.RolId,
                     FechaCreacion = DateTime.UtcNow,
+                    UsuarioCreacion = "sistema",
                     Activo = true
                 };
 
@@ -224,6 +229,7 @@ namespace AgroTrace.Service
                     Email = entity.Email,
                     RolId = entity.RolId,
                     FechaCreacion = entity.FechaCreacion,
+                    UsuarioCreacion = "sistema",
                     Activo = entity.Activo,
                 };
             }
@@ -231,7 +237,11 @@ namespace AgroTrace.Service
             {
                 response.Successful = false;
                 response.Message = "Error al agregar el usuario";
-                response.Errors.Add(ex.Message);
+
+                if (ex.InnerException != null)
+                    response.Errors.Add(ex.InnerException.Message);
+                else
+                    response.Errors.Add(ex.Message);
             }
 
             return response;

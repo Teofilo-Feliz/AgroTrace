@@ -15,14 +15,14 @@ namespace AgroTrace.Controllers
             _usuario = usuario;
         }
 
-       
+
         [HttpGet("Usuarios")]
         public async Task<IActionResult> ObtenerUsuarios([FromQuery] UsuarioFiltro filtro)
         {
             var response = await _usuario.ObtenerUsuarios(filtro);
 
             if (!response.Successful)
-           
+
                 return NotFound(response);
 
             return Ok(response);
@@ -30,7 +30,7 @@ namespace AgroTrace.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerUsuariosId(int id)
+        public async Task<ActionResult<Response>> ObtenerUsuariosId(int id)
         {
             var response = await _usuario.ObtenerUsuariosId(id);
 
@@ -45,7 +45,18 @@ namespace AgroTrace.Controllers
             return Ok(response);
         }
 
+        [HttpPost("AgregarUsuario")]
+        public async Task <ActionResult<Response<AgregarUsuarioResponse>>> AgregarUsuario(AgregarUsuarioRequest request)
+        {
+            var response = await _usuario.AgregarUsuario(request);
+            if (!response.Successful)
+                return BadRequest(response);
+
+            return Ok(response);
 
 
+
+
+        }
     }
 }
