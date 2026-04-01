@@ -21,8 +21,8 @@ namespace AgroTrace.Helpers
             var claims = new[]
             {
             new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-            new Claim(ClaimTypes.Name, usuario.Username),
-            new Claim(ClaimTypes.Role, usuario.Rol.Nombre)
+            new Claim(ClaimTypes.Name, usuario.Username ?? ""),
+            new Claim(ClaimTypes.Role, usuario.Rol?.Nombre ?? "Usuario")
         };
 
             var keyString = _configuration["Jwt:Key"]

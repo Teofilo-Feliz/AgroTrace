@@ -5,6 +5,7 @@ using AgroTrace.Helpers;
 using AgroTrace.Domain.Entities;
 
 
+
 namespace AgroTrace.Service
 {
     public class UsuarioService : IUsuario
@@ -12,16 +13,19 @@ namespace AgroTrace.Service
         private readonly AppDbContext _context;
         private readonly PasswordService _password;
         private readonly ITokenGenerator _refreshToken;
-        
+   
+
 
         public UsuarioService(
             AppDbContext context,
             PasswordService password,
-            ITokenGenerator refreshToken)
+            ITokenGenerator refreshToken
+           )
         {
             _context = context;
             _password = password;
             _refreshToken = refreshToken;
+          
         }
 
         public async Task<Response<UsuariosResponse>> ObtenerUsuarios(UsuarioFiltro usuario)
@@ -38,9 +42,9 @@ namespace AgroTrace.Service
                     u.Username.Contains(usuario.Buscar));
                 }
 
-                if (usuario.Activo.HasValue)
+                if (usuario.Activo)
                 {
-                    query = query.Where(u => u.Activo == usuario.Activo.Value);
+                    query = query.Where(u => u.Activo == usuario.Activo);
                 }
 
                 query = usuario.OrdenarPor?.ToLower() switch
@@ -60,7 +64,7 @@ namespace AgroTrace.Service
 
                 var usuarios = await query
                     .Skip((usuario.PageNumber -1)* usuario.PageSize)
-                    .Take(usuario.PageSize = 10)
+                    .Take(usuario.PageSize)
                     .Select(u => new UsuariosResponse
                     {
                         Id = u.Id,
@@ -82,8 +86,6 @@ namespace AgroTrace.Service
                     ? "Usuarios Obtenidos Exitosamente"
                     : "No hay usuarios registrados";
                 response.EntityId = totalRegistros;
-
-
 
 
             }
@@ -175,7 +177,7 @@ namespace AgroTrace.Service
                 if (string.IsNullOrWhiteSpace(usuario.Username))
                     errores.Add("El Username es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(usuario.PasswordHash))
+                if (string.IsNullOrWhiteSpace(usuario.Password))
                     errores.Add("La contraseña es obligatoria");
 
                 if (errores.Any())
@@ -208,12 +210,13 @@ namespace AgroTrace.Service
                     Apellido = usuario.Apellido,
                     Username = usuario.Username,
                     Email = usuario.Email,
-                    PasswordHash = usuario.PasswordHash,
                     RolId = usuario.RolId,
                     FechaCreacion = DateTime.UtcNow,
                     UsuarioCreacion = "sistema",
                     Activo = true
                 };
+
+                entity.PasswordHash = _password.HashPassword(entity, usuario.Password);
 
                 _context.Usuarios.Add(entity);
                 await _context.SaveChangesAsync();
@@ -247,43 +250,63 @@ namespace AgroTrace.Service
             return response;
         }
 
+        public async Task<Response<ActualizarUsuarioResponse>> ActualizarUsuario(int id, ActualizarUsuarioRequest usuario)
+        {
+            var response = new Response<ActualizarUsuarioResponse>();
 
+            try
+            {
+                var entity = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
+                if (entity == null)
+                {
+                    response.Successful = false;
+                    response.Message = $"Usuario con este id {id} no se ha encontrado";
+                    return response;
+                }
 
+               
+                entity.Nombre = usuario.Nombre;
+                entity.Apellido = usuario.Apellido;
+                entity.Email = usuario.Email;
+                entity.RolId = usuario.RolId;
+                entity.Activo = usuario.Activo;
 
+               
+                entity.FechaModificacion = DateTime.UtcNow;
+                entity.UsuarioModificacion = "sistema";
 
+                await _context.SaveChangesAsync();
 
+              
+                response.Successful = true;
+                response.Message = "Usuario actualizado exitosamente";
+                response.Data = new ActualizarUsuarioResponse
+                {
+                  
+                    Nombre = entity.Nombre,
+                    Apellido = entity.Apellido,
+                    Email = entity.Email,
+                    RolId = entity.RolId,
+                    FechaModificacion = entity.FechaModificacion.Value,
+                    UsuarioModificacion = entity.UsuarioModificacion,
+                    Activo = entity.Activo
+                };
+            }
+            catch (Exception ex)
+            {
+                response.Successful = false;
+                response.Message = "Error al actualizar el usuario";
 
+                if (ex.InnerException != null)
+                    response.Errors.Add(ex.InnerException.Message);
+                else
+                    response.Errors.Add(ex.Message);
+            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            return response;
+        }
 
 
         public async Task<Response<LoginResponse>> LoguearUsuario(string username, string password)
@@ -292,37 +315,46 @@ namespace AgroTrace.Service
 
             try
             {
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                    return ResponseHelper.Fail<LoginResponse>("Username y password son requeridos");
+
                 var usuario = await _context.Usuarios
                     .Include(u => u.Rol)
-                    .FirstOrDefaultAsync(u => u.Username == username);
+                    .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
 
                 if (usuario == null)
-                {
-                    response.Successful = false;
-                    response.Message = "Usuario o contraseña incorrectos";
-                    return response;
-                }
+                    return ResponseHelper.Fail<LoginResponse>("Usuario o contraseña incorrectos");
+
+                if (!usuario.Activo)
+                    return ResponseHelper.Fail<LoginResponse>("Usuario inactivo");
+
+                if (usuario.Rol == null)
+                    return ResponseHelper.Fail<LoginResponse>("Usuario sin rol asignado");
 
                 var isValid = _password.VerifyPassword(usuario, password);
 
                 if (!isValid)
-                {
-                    response.Successful = false;
-                    response.Message = "Usuario o contraseña incorrectos";
-                    return response;
-                }
+                    return ResponseHelper.Fail<LoginResponse>("Usuario o contraseña incorrectos");
+              
 
-                
+                if (usuario.Rol == null)
+                    throw new Exception("El usuario no tiene rol asignado");
+
                 var tokenResponse = await _refreshToken.GenerateTokens(usuario);
+
+                if (!tokenResponse.Successful || tokenResponse.Data == null)
+                    return ResponseHelper.Fail<LoginResponse>("Error generando el token");
 
                 return tokenResponse;
             }
             catch (Exception ex)
             {
                 response.Successful = false;
-                response.Message = ex.Message;
-                return response;
+                response.Message = "Error al iniciar sesión";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
             }
+
+            return response;
         }
     }
 }

@@ -2,7 +2,9 @@
 using AgroTrace.DTO;
 using AgroTrace.Helpers;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace AgroTrace.Service
 {
@@ -11,47 +13,63 @@ namespace AgroTrace.Service
         private readonly AppDbContext _context;
         private readonly JWTService _jwt;
         private readonly IConfiguration _configuration;
+        private readonly JwtOptions _jwtOptions;
 
-        public RefreshTokenService(AppDbContext context, JWTService jwt, IConfiguration configuration)
+        public RefreshTokenService(AppDbContext context, JWTService jwt, IOptions<JwtOptions> options, IConfiguration configuration)
         {
             _context = context;
             _jwt = jwt;
             _configuration = configuration;
+            _jwtOptions = options.Value;
         }
 
         public async Task<Response<LoginResponse>> GenerateTokens(Usuario usuario)
         {
             var response = new Response<LoginResponse>();
 
-            var token = _jwt.GenerateToken(usuario);
-            var refreshToken = _jwt.GenerateRefreshToken();
-
-            var refreshEntity = new RefreshToken
+            try
             {
-                Token = refreshToken,
-                Expiration = DateTime.UtcNow.AddHours(
-                    int.Parse(_configuration["Jwt:RefreshTokenDuracionHoras"]!)
-                ),
-                CreatedAt = DateTime.UtcNow,
-                UsuarioId = usuario.Id,
-                IsRevoked = false
-            };
+                var token = _jwt.GenerateToken(usuario);
+                var refreshToken = _jwt.GenerateRefreshToken();
 
-            _context.RefreshTokens.Add(refreshEntity);
-            await _context.SaveChangesAsync();
+                //var refreshHours = int.TryParse(_configuration["Jwt:RefreshTokenDuracionHoras"], out var h)
+                //    ? h
+                //    : 24;
 
-            var fechaGeneracion = DateTime.UtcNow;
-            var duracion = int.Parse(_configuration["Jwt:DuracionEnMinutos"]!);
+                var refreshEntity = new RefreshToken
+                {
+                    Token = refreshToken,
+                    Expiration = DateTime.UtcNow.AddHours(_jwtOptions.DuracionEnHoras),
+                    CreatedAt = DateTime.UtcNow,
+                    UsuarioId = usuario.Id,
+                    IsRevoked = false
+                };
 
-            response.Successful = true;
-            response.Data = new LoginResponse
+                _context.RefreshTokens.Add(refreshEntity);
+                await _context.SaveChangesAsync();
+
+                //var duracion = int.TryParse(_configuration["Jwt:DuracionEnMinutos"], out var d)
+                //    ? d
+                //    : 60;
+
+                var fechaGeneracion = DateTime.UtcNow;
+
+                response.Successful = true;
+                response.Data = new LoginResponse
+                {
+                    Token = token,
+                    RefreshToken = refreshToken,
+                    FechaGeneracion = fechaGeneracion,
+                    DuracionEnMinutos = _jwtOptions.DuracionEnMinutos,
+                    FechaExpiracion = fechaGeneracion.AddMinutes(_jwtOptions.DuracionEnMinutos)
+                };
+            }
+            catch (Exception ex)
             {
-                Token = token,
-                RefreshToken = refreshToken,
-                FechaGeneracion = fechaGeneracion,
-                DuracionEnMinutos = duracion,
-                FechaExpiracion = fechaGeneracion.AddMinutes(duracion)
-            };
+                response.Successful = false;
+                response.Message = "Error generando tokens";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+            }
 
             return response;
         }
@@ -62,34 +80,40 @@ namespace AgroTrace.Service
 
             try
             {
+                if (string.IsNullOrWhiteSpace(refreshToken))
+                    return ResponseHelper.Fail<LoginResponse>("Refresh token vacío");
+
+                refreshToken = refreshToken.Trim();
+
                 var storedToken = await _context.RefreshTokens
                     .Include(r => r.Usuario)
                     .ThenInclude(u => u.Rol)
                     .FirstOrDefaultAsync(r => r.Token == refreshToken);
 
-                if (storedToken == null ||
-                    storedToken.IsRevoked ||
-                    storedToken.Expiration < DateTime.UtcNow)
-                {
-                    response.Successful = false;
-                    response.Message = "Refresh token inválido";
-                    return response;
-                }
+                if (storedToken == null)
+                    return ResponseHelper.Fail<LoginResponse>("Refresh token inválido");
 
-              
+                if (storedToken.IsRevoked || storedToken.Expiration < DateTime.UtcNow)
+                    return ResponseHelper.Fail<LoginResponse>("Refresh token inválido o expirado");
+
+                if (storedToken.Usuario == null)
+                    return ResponseHelper.Fail<LoginResponse>("Token sin usuario asociado");
+
+                if (storedToken.Usuario.Rol == null)
+                    return ResponseHelper.Fail<LoginResponse>("Usuario sin rol");
+
                 storedToken.IsRevoked = true;
 
-              
                 var newRefreshToken = _jwt.GenerateRefreshToken();
 
-                var refreshDuration = int.Parse(
-                    _configuration["Jwt:RefreshTokenDuracionHoras"]!
-                );
+                //var refreshDuration = int.TryParse(_configuration["Jwt:RefreshTokenDuracionHoras"], out var h)
+                //    ? h
+                //    : 24;
 
                 var newRefreshEntity = new RefreshToken
                 {
                     Token = newRefreshToken,
-                    Expiration = DateTime.UtcNow.AddHours(refreshDuration),
+                    Expiration = DateTime.UtcNow.AddHours(_jwtOptions.DuracionEnHoras),
                     CreatedAt = DateTime.UtcNow,
                     UsuarioId = storedToken.UsuarioId,
                     IsRevoked = false
@@ -97,13 +121,15 @@ namespace AgroTrace.Service
 
                 _context.RefreshTokens.Add(newRefreshEntity);
 
-              
                 var newJwt = _jwt.GenerateToken(storedToken.Usuario);
 
                 await _context.SaveChangesAsync();
 
+                //var duracion = int.TryParse(_configuration["Jwt:DuracionEnMinutos"], out var d)
+                //    ? d
+                //    : 60;
+
                 var fechaGeneracion = DateTime.UtcNow;
-                var duracion = int.Parse(_configuration["Jwt:DuracionEnMinutos"]!);
 
                 response.Successful = true;
                 response.Data = new LoginResponse
@@ -111,8 +137,8 @@ namespace AgroTrace.Service
                     Token = newJwt,
                     RefreshToken = newRefreshToken,
                     FechaGeneracion = fechaGeneracion,
-                    DuracionEnMinutos = duracion,
-                    FechaExpiracion = fechaGeneracion.AddMinutes(duracion)
+                    DuracionEnMinutos = _jwtOptions.DuracionEnMinutos,
+                    FechaExpiracion = fechaGeneracion.AddMinutes(_jwtOptions.DuracionEnMinutos)
                 };
 
                 return response;
@@ -120,10 +146,12 @@ namespace AgroTrace.Service
             catch (Exception ex)
             {
                 response.Successful = false;
-                response.Message = ex.Message;
+                response.Message = "Error al refrescar token";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
                 return response;
             }
         }
     }
+ }
 
-}
+

@@ -7,9 +7,7 @@ namespace AgroTrace.Service
         Task<Response<UsuariosResponse>> ObtenerUsuarios(UsuarioFiltro usuario);
         Task<Response<UsuariosResponse>> ObtenerUsuariosId(int id);
         Task<Response<AgregarUsuarioResponse>> AgregarUsuario(AgregarUsuarioRequest usuario);
-
-
-
+        Task<Response<ActualizarUsuarioResponse>> ActualizarUsuario(int id, ActualizarUsuarioRequest usuario);
         Task<Response<LoginResponse>> LoguearUsuario(string username, string password);
     }
 }

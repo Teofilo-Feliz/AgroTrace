@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgroTrace.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260327210913_AgregarEsquemass")]
-    partial class AgregarEsquemass
+    [Migration("20260401131148_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

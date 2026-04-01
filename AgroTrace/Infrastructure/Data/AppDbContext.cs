@@ -320,17 +320,6 @@ namespace AgroTrace.Infrastructure.Data
             });
 
 
-
-
-
-
-
-
-
-
-
-
-
         }
     }   
 }

@@ -1,22 +1,63 @@
 using AgroTrace.Domain.Entities;
 using AgroTrace.Helpers;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Options;
 using AgroTrace.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers();
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "AgroTrace Aplication",
+        Version = "v1"
+    });
+
+   
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Ingresa el token así: Bearer {tu token}"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
@@ -24,6 +65,8 @@ builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JWTService>();
 builder.Services.AddScoped<IUsuario, UsuarioService>();
 builder.Services.AddScoped<ITokenGenerator, RefreshTokenService>();
+builder.Services.AddScoped<IRoles, RolesServices>();
+
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new Exception("JWT Key no configurada");
@@ -52,6 +95,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
+
 
 builder.Services.AddAuthorization();
 
