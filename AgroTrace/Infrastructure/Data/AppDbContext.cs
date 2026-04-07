@@ -1,14 +1,48 @@
 ﻿using AgroTrace.Domain.Entities;
+using AgroTrace.Service;
 using Microsoft.EntityFrameworkCore;
+
 namespace AgroTrace.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
+        private readonly IUserAudi _userAudi;
+
+        public AppDbContext(DbContextOptions<AppDbContext> options, IUserAudi userAudi)
+            : base(options)
         {
+            _userAudi = userAudi;
         }
-        
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var currentUser = _userAudi.GetUsername();
+            var entries = ChangeTracker.Entries<BaseEntity>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.FechaCreacion = DateTime.UtcNow;
+                    entry.Entity.UsuarioCreacion = currentUser;
+                }
+
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Property(e => e.FechaCreacion).IsModified = false;
+                    entry.Property(e => e.UsuarioCreacion).IsModified = false;
+
+                    entry.Entity.FechaModificacion = DateTime.UtcNow;
+                    entry.Entity.UsuarioModificacion = currentUser;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+
+
+
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
         public DbSet<Finca> Fincas { get; set; }
@@ -25,6 +59,7 @@ namespace AgroTrace.Infrastructure.Data
         public DbSet<Tratamiento> Tratamientos { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+       
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

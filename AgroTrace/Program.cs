@@ -66,6 +66,8 @@ builder.Services.AddScoped<JWTService>();
 builder.Services.AddScoped<IUsuario, UsuarioService>();
 builder.Services.AddScoped<ITokenGenerator, RefreshTokenService>();
 builder.Services.AddScoped<IRoles, RolesServices>();
+builder.Services.AddScoped<IUserAudi, UserAudiServices>();
+builder.Services.AddHttpContextAccessor();
 
 
 var jwtKey = builder.Configuration["Jwt:Key"]

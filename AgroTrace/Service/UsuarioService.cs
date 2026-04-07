@@ -180,6 +180,9 @@ namespace AgroTrace.Service
                 if (string.IsNullOrWhiteSpace(usuario.Password))
                     errores.Add("La contraseña es obligatoria");
 
+                if (usuario.Password.Length < 6)
+                    errores.Add("La contraseña debe tener al menos 6 caracteres");
+
                 if (errores.Any())
                 {
                     response.Successful = false;
@@ -211,8 +214,6 @@ namespace AgroTrace.Service
                     Username = usuario.Username,
                     Email = usuario.Email,
                     RolId = usuario.RolId,
-                    FechaCreacion = DateTime.UtcNow,
-                    UsuarioCreacion = "sistema",
                     Activo = true
                 };
 
@@ -231,8 +232,7 @@ namespace AgroTrace.Service
                     Username = entity.Username,
                     Email = entity.Email,
                     RolId = entity.RolId,
-                    FechaCreacion = entity.FechaCreacion,
-                    UsuarioCreacion = "sistema",
+                    FechaCreacion = entity.FechaCreacion, 
                     Activo = entity.Activo,
                 };
             }
@@ -260,11 +260,17 @@ namespace AgroTrace.Service
                     .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (entity == null)
-                {
-                    response.Successful = false;
-                    response.Message = $"Usuario con este id {id} no se ha encontrado";
-                    return response;
-                }
+                    return ResponseHelper.Fail<ActualizarUsuarioResponse>($"Usuario con id {id} no encontrado");
+
+               
+                if (string.IsNullOrWhiteSpace(usuario.Email))
+                    return ResponseHelper.Fail<ActualizarUsuarioResponse>("El email es obligatorio");
+
+                var rolExiste = await _context.Roles
+                    .AnyAsync(r => r.Id == usuario.RolId);
+
+                if (!rolExiste)
+                    return ResponseHelper.Fail<ActualizarUsuarioResponse>("El rol no existe");
 
                
                 entity.Nombre = usuario.Nombre;
@@ -273,39 +279,30 @@ namespace AgroTrace.Service
                 entity.RolId = usuario.RolId;
                 entity.Activo = usuario.Activo;
 
-               
-                entity.FechaModificacion = DateTime.UtcNow;
-                entity.UsuarioModificacion = "sistema";
-
                 await _context.SaveChangesAsync();
 
-              
                 response.Successful = true;
                 response.Message = "Usuario actualizado exitosamente";
                 response.Data = new ActualizarUsuarioResponse
                 {
-                  
                     Nombre = entity.Nombre,
                     Apellido = entity.Apellido,
                     Email = entity.Email,
                     RolId = entity.RolId,
-                    FechaModificacion = entity.FechaModificacion.Value,
+                    FechaModificacion = entity.FechaModificacion!.Value,
                     UsuarioModificacion = entity.UsuarioModificacion,
                     Activo = entity.Activo
                 };
+
+                return response;
             }
             catch (Exception ex)
             {
                 response.Successful = false;
                 response.Message = "Error al actualizar el usuario";
-
-                if (ex.InnerException != null)
-                    response.Errors.Add(ex.InnerException.Message);
-                else
-                    response.Errors.Add(ex.Message);
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+                return response;
             }
-
-            return response;
         }
 
 
