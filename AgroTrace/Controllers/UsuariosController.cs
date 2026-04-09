@@ -1,6 +1,6 @@
-﻿using AgroTrace.Domain.Entities;
-using AgroTrace.DTO;
-using AgroTrace.Service;
+﻿using AgroTrace.Aplication.DTO;
+using AgroTrace.Aplication.Service;
+using AgroTrace.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,5 +1,5 @@
-﻿using AgroTrace.Domain.Entities;
-using AgroTrace.Service;
+﻿using AgroTrace.Aplication.Service;
+using AgroTrace.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgroTrace.Infrastructure.Data

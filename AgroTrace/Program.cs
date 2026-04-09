@@ -1,16 +1,44 @@
+using AgroTrace.Aplication.DTO;
+using AgroTrace.Aplication.Helpers;
+using AgroTrace.Aplication.Options;
+using AgroTrace.Aplication.Service;
+using AgroTrace.Aplication.Validators;
+using AgroTrace.Aplication.Validators.Usuario;
 using AgroTrace.Domain.Entities;
-using AgroTrace.Helpers;
 using AgroTrace.Infrastructure.Data;
-using AgroTrace.Options;
-using AgroTrace.Service;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .SelectMany(x => x.Value.Errors)
+                .Select(x => x.ErrorMessage)
+                .ToList();
+
+            var response = new Response<object>
+            {
+                Successful = false,
+                Message = "Errores de validación",
+                Errors = errors
+            };
+
+            return new BadRequestObjectResult(response);
+        };
+    });
 
 
 builder.Services.AddControllers();
@@ -68,6 +96,9 @@ builder.Services.AddScoped<ITokenGenerator, RefreshTokenService>();
 builder.Services.AddScoped<IRoles, RolesServices>();
 builder.Services.AddScoped<IUserAudi, UserAudiServices>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddValidatorsFromAssemblyContaining<AgregarUsuarioValidator>();
+builder.Services.AddScoped<IValidationService, ValidationService>();
+
 
 
 var jwtKey = builder.Configuration["Jwt:Key"]

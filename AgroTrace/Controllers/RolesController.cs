@@ -1,5 +1,5 @@
-﻿using AgroTrace.DTO;
-using AgroTrace.Service;
+﻿using AgroTrace.Aplication.DTO;
+using AgroTrace.Aplication.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
