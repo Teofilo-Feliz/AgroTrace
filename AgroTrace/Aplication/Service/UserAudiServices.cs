@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using AgroTrace.Aplication.Interfaces;
+using System.Security.Claims;
 
 namespace AgroTrace.Aplication.Service
 {

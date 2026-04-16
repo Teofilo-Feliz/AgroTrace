@@ -1,6 +1,6 @@
 ﻿using AgroTrace.Aplication.DTO;
 
-namespace AgroTrace.Aplication.Service
+namespace AgroTrace.Aplication.Interfaces
 {
     public interface IAnimal
     {

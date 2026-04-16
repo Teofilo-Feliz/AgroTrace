@@ -1,4 +1,5 @@
 ﻿using AgroTrace.Aplication.DTO;
+using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

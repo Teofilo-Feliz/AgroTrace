@@ -1,5 +1,4 @@
-﻿
-namespace AgroTrace.Aplication.Validators
+﻿namespace AgroTrace.Aplication.Interfaces
 {
     public interface IValidationService
     {

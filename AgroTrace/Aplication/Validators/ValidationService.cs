@@ -1,14 +1,18 @@
-﻿using FluentValidation;
+﻿using AgroTrace.Aplication.Interfaces;
+using AgroTrace.Aplication.Validators.ValidationAnimal;
+using FluentValidation;
 
 namespace AgroTrace.Aplication.Validators
 {
     public class ValidationService : IValidationService
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly MetodosValidacion _metodos;
 
-        public ValidationService(IServiceProvider serviceProvider)
+        public ValidationService(IServiceProvider serviceProvider, MetodosValidacion metodos)
         {
             _serviceProvider = serviceProvider;
+            _metodos = metodos;
         }
 
         public async Task ValidateAsync<T>(T model)

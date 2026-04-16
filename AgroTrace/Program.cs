@@ -1,13 +1,14 @@
 using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Helpers;
+using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Aplication.Options;
 using AgroTrace.Aplication.Service;
 using AgroTrace.Aplication.Validators;
 using AgroTrace.Aplication.Validators.Usuario;
+using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -98,6 +99,8 @@ builder.Services.AddScoped<IUserAudi, UserAudiServices>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssemblyContaining<AgregarUsuarioValidator>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
+builder.Services.AddScoped<MetodosValidacion>();
+builder.Services.AddScoped<IAnimal, AnimalServices>();
 
 
 

@@ -1,4 +1,4 @@
-﻿using AgroTrace.Aplication.Service;
+﻿using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

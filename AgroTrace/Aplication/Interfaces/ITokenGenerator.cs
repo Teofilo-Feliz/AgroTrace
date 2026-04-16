@@ -1,7 +1,7 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Domain.Entities;
 
-namespace AgroTrace.Aplication.Service
+namespace AgroTrace.Aplication.Interfaces
 {
     public interface ITokenGenerator
     {

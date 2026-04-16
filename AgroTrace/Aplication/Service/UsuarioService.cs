@@ -1,11 +1,10 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Helpers;
-using AgroTrace.Aplication.Validators;
+using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
-using Azure.Core;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 
 

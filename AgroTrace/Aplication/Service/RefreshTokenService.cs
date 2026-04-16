@@ -1,5 +1,6 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Helpers;
+using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Aplication.Options;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
