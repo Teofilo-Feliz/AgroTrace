@@ -1,11 +1,13 @@
 ﻿using AgroTrace.Aplication.DTO;
-using AgroTrace.Aplication.Validators.Animal;
-using AgroTrace.Infrastructure.Data;
-using Microsoft.Identity.Client;
-using AgroTrace.Aplication.Validators;
-using AgroTrace.Domain.Entities;
-using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Aplication.Interfaces;
+using AgroTrace.Aplication.Validators;
+using AgroTrace.Aplication.Validators.Animal;
+using AgroTrace.Aplication.Validators.ValidationAnimal;
+using AgroTrace.Domain.Entities;
+using AgroTrace.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 
 
@@ -28,10 +30,44 @@ namespace AgroTrace.Aplication.Service
         public async Task<Response<AgregarAnimalesResponse>> AgregarAnimal(AgregarAnimalesRequest animal)
         {
             var response = new Response<AgregarAnimalesResponse>();
+            var errores = new List<string>();
 
             try
             {
-                
+                var result = await _validator.ValidateAsync(animal);
+
+
+                if (!result.IsValid)
+                {
+                    return new Response<AgregarAnimalesResponse>
+                    {
+                        Successful = false,
+                        Message = "Errores de validación",
+                        Errors = result.Errors.Select(e => e.ErrorMessage).ToList()
+                    };
+                }
+
+                var existeCodigo = await _context.Animales
+                .AnyAsync(a =>
+                 a.Codigo.ToLower() == animal.Codigo.ToLower() &&
+                 a.FincaId == animal.FincaId
+     );
+
+                if (existeCodigo)
+                {
+                    errores.Add($"El código {animal.Codigo} ya existe en la finca {animal.FincaId}");
+                }
+
+
+                if (errores.Any())
+                {
+                    return new Response<AgregarAnimalesResponse>
+                    {
+                        Successful = false,
+                        Message = "Errores de validación",
+                        Errors = errores
+                    };
+                }
 
                 var entity = new Animal
                 {
@@ -45,14 +81,13 @@ namespace AgroTrace.Aplication.Service
                     RazaId = animal.RazaId,
                     EstadoAnimalId = animal.EstadoAnimalId,
                     Activo = animal.Activo,
-
                 };
 
                 _context.Animales.Add(entity);
                 await _context.SaveChangesAsync();
 
                 response.Successful = true;
-                response.Message = "Animal Agregado exitosamente";
+                response.Message = "Animal agregado exitosamente";
                 response.Data = new AgregarAnimalesResponse
                 {
                     Id = entity.Id,
@@ -66,26 +101,18 @@ namespace AgroTrace.Aplication.Service
                     EstadoAnimalId = entity.EstadoAnimalId,
                     Activo = entity.Activo,
                 };
-                
-                return response;
 
+                return response;
             }
-            catch (FluentValidation.ValidationException ex)
+            catch (Exception ex)
             {
                 response.Successful = false;
                 response.Message = "Error al agregar Animal";
                 response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
 
                 return response;
-               
             }
-           
-           
-
-
-
         }
-
 
 
 

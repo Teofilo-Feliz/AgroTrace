@@ -123,7 +123,7 @@ namespace AgroTrace.Infrastructure.Data
                entity.Property(e => e.Codigo)
                .IsRequired()
                .HasMaxLength(100);
-
+               
                entity.Property(e => e.Nombre)
               .IsRequired()
               .HasMaxLength(100);

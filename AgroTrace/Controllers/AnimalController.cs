@@ -1,12 +1,14 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroTrace.Controllers
 {
-    [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
+    [Route("api/[controller]")]
     public class AnimalController : ControllerBase
     {
         private readonly IAnimal _Animal;
@@ -18,7 +20,7 @@ namespace AgroTrace.Controllers
 
 
 
-
+        [Authorize(Roles = "Administrador")]
         [HttpPost("AgregarAnimal")]
         public async Task<ActionResult<Response<AgregarAnimalesResponse>>> AgregarAnimal(AgregarAnimalesRequest request)
         {

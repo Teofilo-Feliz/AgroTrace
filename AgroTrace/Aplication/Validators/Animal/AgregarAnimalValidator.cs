@@ -1,5 +1,6 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Validators.ValidationAnimal;
+using AgroTrace.Domain.Entities;
 using FluentValidation;
 
 namespace AgroTrace.Aplication.Validators.Animal
@@ -24,37 +25,42 @@ namespace AgroTrace.Aplication.Validators.Animal
             .MaximumLength(100).WithMessage("Maximo 100 caracteres");
 
             RuleFor(x => x.Sexo)
-            .NotEmpty().WithMessage("El sexo es obligatorio")
-            .MaximumLength(15).WithMessage("Maximo 15 caracteres");
+           .NotEmpty().WithMessage("El sexo es obligatorio")
+           .Must(x => x == "M" || x == "H")
+           .WithMessage("El sexo debe ser M o H");
 
             RuleFor(x => x.FechaNacimiento)
             .Must(fecha => fecha != default)
             .WithMessage("La fecha de nacimiento es obligatoria")
-            .LessThan(DateTime.Now)
+            .LessThan(DateTime.UtcNow)
             .WithMessage("La fecha de nacimiento no puede ser futura");
 
             RuleFor(x => x.FincaId)
-            .GreaterThan(0).WithMessage("FincaId es obligatorio")
-            .MustAsync(async (id, ct) =>
-             await _metodosValidacion.FincaExiste(id))
-             .WithMessage("La finca no existe");
+           .Cascade(CascadeMode.Stop)
+           .GreaterThan(0).WithMessage("FincaId es obligatorio")
+           .MustAsync(async (id, ct) =>
+            await _metodosValidacion.ExisteAsync<Finca>(f => f.Id == id))
+           .WithMessage("La finca no existe");
 
             RuleFor(x => x.TipoAnimalId)
+           .Cascade(CascadeMode.Stop)
            .GreaterThan(0).WithMessage("TipoAnimalId es obligatorio")
            .MustAsync(async (id, ct) =>
-            await _metodosValidacion.TipoAnimalExiste(id))
-            .WithMessage("La finca no existe");
+            await _metodosValidacion.ExisteAsync<TipoAnimal>(f => f.Id == id))
+            .WithMessage("El Id tipo animal no existe");
 
             RuleFor(x => x.RazaId)
+           .Cascade(CascadeMode.Stop)
            .GreaterThan(0).WithMessage("RazaId es obligatorio")
            .MustAsync(async (id, ct) =>
-            await _metodosValidacion.RazaIdExiste(id))
+            await _metodosValidacion.ExisteAsync<Raza>(f => f.Id == id))
             .WithMessage("El id Raza no existe");
 
             RuleFor(x => x.EstadoAnimalId)
+          .Cascade(CascadeMode.Stop)
           .GreaterThan(0).WithMessage("EstadoAnimalId es obligatorio")
           .MustAsync(async (id, ct) =>
-           await _metodosValidacion.EstadoAnimalId(id))
+           await _metodosValidacion.ExisteAsync<EstadoAnimal>(f => f.Id == id))
            .WithMessage("El Id Estado Animal no existe");
 
 
