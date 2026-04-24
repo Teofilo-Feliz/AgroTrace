@@ -4,6 +4,8 @@ using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Aplication.Options;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Infrastructure.PatronRepository.RefreshTokenRepository;
+using AgroTrace.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -11,17 +13,19 @@ namespace AgroTrace.Aplication.Service
 {
     public class RefreshTokenService: ITokenGenerator
     {
-        private readonly AppDbContext _context;
+        private readonly IRefreshRepository _refreshRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly JWTService _jwt;
         private readonly IConfiguration _configuration;
         private readonly JwtOptions _jwtOptions;
 
-        public RefreshTokenService(AppDbContext context, JWTService jwt, IOptions<JwtOptions> options, IConfiguration configuration)
+        public RefreshTokenService(IRefreshRepository refreshRepository, JWTService jwt, IOptions<JwtOptions> options, IConfiguration configuration, IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _refreshRepository = refreshRepository;
             _jwt = jwt;
             _configuration = configuration;
             _jwtOptions = options.Value;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Response<LoginResponse>> GenerateTokens(Usuario usuario)
@@ -46,8 +50,8 @@ namespace AgroTrace.Aplication.Service
                     IsRevoked = false
                 };
 
-                _context.RefreshTokens.Add(refreshEntity);
-                await _context.SaveChangesAsync();
+                await _refreshRepository.Add(refreshEntity);
+                await _unitOfWork.SaveChangesAsync();
 
                 //var duracion = int.TryParse(_configuration["Jwt:DuracionEnMinutos"], out var d)
                 //    ? d
@@ -86,10 +90,8 @@ namespace AgroTrace.Aplication.Service
 
                 refreshToken = refreshToken.Trim();
 
-                var storedToken = await _context.RefreshTokens
-                    .Include(r => r.Usuario)
-                    .ThenInclude(u => u.Rol)
-                    .FirstOrDefaultAsync(r => r.Token == refreshToken);
+                var storedToken = await _refreshRepository.GetByToken(refreshToken);
+                    
 
                 if (storedToken == null)
                     return ResponseHelper.Fail<LoginResponse>("Refresh token inválido");
@@ -120,12 +122,11 @@ namespace AgroTrace.Aplication.Service
                     IsRevoked = false
                 };
 
-                _context.RefreshTokens.Add(newRefreshEntity);
+                await _refreshRepository.Add(newRefreshEntity);
 
                 var newJwt = _jwt.GenerateToken(storedToken.Usuario);
 
-                await _context.SaveChangesAsync();
-
+                await _unitOfWork.SaveChangesAsync();
                 //var duracion = int.TryParse(_configuration["Jwt:DuracionEnMinutos"], out var d)
                 //    ? d
                 //    : 60;

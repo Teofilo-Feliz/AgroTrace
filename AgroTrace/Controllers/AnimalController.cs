@@ -9,6 +9,7 @@ namespace AgroTrace.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+
     public class AnimalController : ControllerBase
     {
         private readonly IAnimal _Animal;
@@ -17,6 +18,25 @@ namespace AgroTrace.Controllers
         {
             _Animal = animal;
         }
+
+
+        [Authorize(Roles = "Usuario, Administrador")]
+        [HttpGet("ObtenerAnimal")]
+        public async Task<ActionResult<Response<ObtenerAnimalResponse>>> ObtenerAnimales([FromQuery]FiltroAnimal filtro)
+        {
+            var response = await _Animal.ObtenerAnimales(filtro);
+            if (!response.Successful)
+            
+                return BadRequest(response);
+
+            
+            return Ok(response);
+
+
+        }
+
+
+
 
 
 

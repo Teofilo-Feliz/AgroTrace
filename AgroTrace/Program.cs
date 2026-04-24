@@ -8,11 +8,18 @@ using AgroTrace.Aplication.Validators.Usuario;
 using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Infrastructure.PatronRepository.AnimalRepository;
+using AgroTrace.Infrastructure.PatronRepository.GenericRepository;
+using AgroTrace.Infrastructure.PatronRepository.RefreshTokenRepository;
+using AgroTrace.Infrastructure.PatronRepository.RolesRepository;
+using AgroTrace.Infrastructure.PatronRepository.UsuarioRepository;
+using AgroTrace.Infrastructure.UnitOfWork;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -59,9 +66,10 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "AgroTrace Aplication",
         Version = "v1"
+
     });
 
-   
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -101,7 +109,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<AgregarUsuarioValidator>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<MetodosValidacion>();
 builder.Services.AddScoped<IAnimal, AnimalServices>();
-
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IRolesRepository, RolesRepository>();
+builder.Services.AddScoped<IRefreshRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IAnimalRepository, AnimalRepository>();
 
 
 var jwtKey = builder.Configuration["Jwt:Key"]

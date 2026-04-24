@@ -10,6 +10,7 @@ namespace AgroTrace.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+   
 
     public class RolesController : ControllerBase
     {
@@ -21,11 +22,11 @@ namespace AgroTrace.Controllers
 
         [Authorize(Roles = "Administrador,Gerente")]
         [HttpGet("ObtenerRoles")]
-        public async Task<ActionResult<Response>> ObtenerRoles()
+        public async Task<ActionResult<Response>> ObtenerRoles([FromQuery]Filtro filtro)
         {
-            var response = await _roles.ObtenerRoles();
+            var response = await _roles.ObtenerRoles(filtro);
             if (!response.Successful)
-                return NotFound(response);
+                return BadRequest(response);
             return Ok(response);
 
 

@@ -5,6 +5,8 @@ using AgroTrace.Aplication.Validators.Animal;
 using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Infrastructure.PatronRepository.AnimalRepository;
+using AgroTrace.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
@@ -15,17 +17,70 @@ namespace AgroTrace.Aplication.Service
 {
     public class AnimalServices : IAnimal
     {
-        private readonly AppDbContext _context;
+        private readonly IAnimalRepository _animalRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly AgregarAnimalValidator _validator;
         private readonly MetodosValidacion _metodos;
 
-        public AnimalServices(AppDbContext context, AgregarAnimalValidator validator, MetodosValidacion metodos)
+        public AnimalServices(IAnimalRepository animalRepository, AgregarAnimalValidator validator, MetodosValidacion metodos, IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _animalRepository = animalRepository;
+            _unitOfWork = unitOfWork;
             _validator = validator;
             _metodos = metodos;
 
         }
+
+
+        public async Task<Response<ObtenerAnimalResponse>> ObtenerAnimales(FiltroAnimal filtro)
+        {
+            var response = new Response<ObtenerAnimalResponse>();
+
+            try
+            {
+
+                var (animales, total) = await _animalRepository.ObtenerAnimales(filtro);
+
+
+                var data = animales.Select(a => new ObtenerAnimalResponse
+                {
+                    Id = a.Id,
+                    Codigo = a.Codigo,
+                    Nombre = a.Nombre,
+                    FechaNacimiento = a.FechaNacimiento,
+                    Sexo = a.Sexo,
+                    Peso = a.Peso,
+                    FincaId = a.FincaId,
+                    FincaNombre = a.Finca.Nombre,
+                    TipoAnimalId = a.TipoAnimalId,
+                    TipoAnimalNombre = a.TipoAnimal.Nombre,
+                    RazaId = a.RazaId,
+                    RazaNombre = a.Raza.Nombre,
+                    EstadoAnimalId = a.EstadoAnimalId,
+                    EstadoAnimalNombre = a.EstadoAnimal.Nombre,
+                    Activo = a.Activo
+                }).ToList();
+
+                response.Successful = true;
+                response.DataList = data;
+                response.EntityId = total;
+                response.Message = data.Any()
+                    ? "Animales obtenidos exitosamente"
+                    : "No hay animales registrados";
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Successful = false;
+                response.Message = "Error al obtener los animales";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+                return response;
+            }
+        }
+
+
+
 
         public async Task<Response<AgregarAnimalesResponse>> AgregarAnimal(AgregarAnimalesRequest animal)
         {
@@ -47,11 +102,8 @@ namespace AgroTrace.Aplication.Service
                     };
                 }
 
-                var existeCodigo = await _context.Animales
-                .AnyAsync(a =>
-                 a.Codigo.ToLower() == animal.Codigo.ToLower() &&
-                 a.FincaId == animal.FincaId
-     );
+                var existeCodigo = await _animalRepository.ExisteCodigo(animal.Codigo, animal.FincaId);
+             
 
                 if (existeCodigo)
                 {
@@ -83,8 +135,8 @@ namespace AgroTrace.Aplication.Service
                     Activo = animal.Activo,
                 };
 
-                _context.Animales.Add(entity);
-                await _context.SaveChangesAsync();
+                await _animalRepository.AgregarAnimal(entity);
+                await _unitOfWork.SaveChangesAsync();
 
                 response.Successful = true;
                 response.Message = "Animal agregado exitosamente";

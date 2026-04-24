@@ -2,50 +2,73 @@
 using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
+using AgroTrace.Infrastructure.PatronRepository.RolesRepository;
+using AgroTrace.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace AgroTrace.Aplication.Service
 {
     public class RolesServices: IRoles     
     {
-        private readonly AppDbContext _context;
-
-        public RolesServices(AppDbContext context)
+        private readonly IRolesRepository _rolesRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        public RolesServices(IRolesRepository rolesRepository, IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _rolesRepository = rolesRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<Response<List<RolesResponse>>> ObtenerRoles()
+        public async Task<Response<RolesResponse>> ObtenerRoles(Filtro filtro)
         {
-            var response = new Response<List<RolesResponse>>
+            var response = new Response<RolesResponse>
             {
                 Errors = new List<string>()
             };
 
             try
             {
-                var roles = await _context.Roles
-                    .Select(r => new RolesResponse
-                    {
-                        Id = r.Id,
-                        Nombre = r.Nombre,
-                        Descripcion = r.Descripcion,      
-                        Activo = r.Activo
-                    })
-                    .ToListAsync();
+               
+                filtro.PageNumber = filtro.PageNumber <= 0 ? 1 : filtro.PageNumber;
+                filtro.PageSize = filtro.PageSize <= 0 ? 10 : filtro.PageSize;
+
+                var (roles, total) = await _rolesRepository.ObtenerRoles(filtro);
+
+               
+                if (!roles.Any())
+                {
+                    response.Successful = true;
+                    response.Message = "No hay roles registrados";
+                    response.DataList = new List<RolesResponse>();
+                    response.EntityId = total;
+                    return response;
+                }
+
+               
+                var data = roles.Select(r => new RolesResponse
+                {
+                    Id = r.Id,
+                    Nombre = r.Nombre,
+                    Descripcion = r.Descripcion,
+                    Activo = r.Activo
+                }).ToList();
+
 
                 response.Successful = true;
-                response.Data = roles;
                 response.Message = "Roles obtenidos exitosamente";
+                response.DataList = data;
+                response.EntityId = total;
+
+                return response;
             }
             catch (Exception ex)
             {
                 response.Successful = false;
                 response.Message = "Error al obtener los roles";
                 response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
-            }
 
-            return response;
+                return response;
+            }
         }
 
 
@@ -55,12 +78,21 @@ namespace AgroTrace.Aplication.Service
 
             try
             {
-                var nombre = rol.Nombre.Trim().ToLower();
 
-                var existe = await _context.Roles
-                    .FirstOrDefaultAsync(r => r.Nombre.ToLower() == nombre);
+                if (string.IsNullOrWhiteSpace(rol.Nombre))
+                {
+                    return new Response<RolesResponse>
+                    {
+                        Successful = false,
+                        Message = "El nombre del rol es requerido"
+                    };
+                }
+                    var nombre = rol.Nombre.Trim();
 
-                if (existe != null)
+                var existe = await _rolesRepository.ExisteRol(nombre);  
+
+
+                if (existe)
                 {
                     response.Successful = false;
                     response.Message = "El rol ya existe";
@@ -73,8 +105,8 @@ namespace AgroTrace.Aplication.Service
                     Activo = true
                 };
 
-                _context.Roles.Add(nuevoRol);
-                await _context.SaveChangesAsync();
+                await _rolesRepository.AgregarRol(nuevoRol);
+                await _unitOfWork.SaveChangesAsync();
 
                 response.Successful = true;
                 response.Message = "Rol creado exitosamente";
@@ -111,9 +143,8 @@ namespace AgroTrace.Aplication.Service
                     return response;
                 }
 
-                var rolExistente = await _context.Roles
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
+                var rolExistente = await _rolesRepository.ObtenerRolId(id);
+                   
                 if (rolExistente == null)
                 {
                     response.Successful = false;
@@ -122,10 +153,10 @@ namespace AgroTrace.Aplication.Service
                 }
 
                
-                var nombreNormalizado = rol.Nombre.Trim().ToLower();
+                var nombre = rol.Nombre.Trim();
 
-                var existe = await _context.Roles
-                    .AnyAsync(r => r.Nombre.ToLower() == nombreNormalizado && r.Id != id);
+                var existe = await _rolesRepository.ExisteRolId(nombre, id);
+                   
 
                 if (existe)
                 {
@@ -138,7 +169,7 @@ namespace AgroTrace.Aplication.Service
                 rolExistente.Nombre = rol.Nombre.Trim();
                 rolExistente.Descripcion = rol.Descripcion?.Trim();
 
-                await _context.SaveChangesAsync(); 
+                await _unitOfWork.SaveChangesAsync(); 
 
                 response.Successful = true;
                 response.Message = "Rol actualizado exitosamente";
@@ -152,11 +183,11 @@ namespace AgroTrace.Aplication.Service
 
                 return response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 response.Successful = false;
                 response.Message = "Error al actualizar el rol";
-                response.Errors.Add("Error interno");
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
                 return response;
             }
         }

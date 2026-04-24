@@ -12,20 +12,21 @@ namespace AgroTrace.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-   
+    
+
     public class UsuariosController : ControllerBase
     {
         private readonly IUsuario _usuario;
-        private readonly ITokenGenerator _tokenService;
+
         public UsuariosController(IUsuario usuario, ITokenGenerator tokenGenerator)
         {
             _usuario = usuario;
-            _tokenService = tokenGenerator;
+
         }
 
         [Authorize(Roles = "Administrador,Usuario")]
         [HttpGet("Usuarios")]
-        public async Task<IActionResult> ObtenerUsuarios([FromQuery] UsuarioFiltro filtro)
+        public async Task<IActionResult> ObtenerUsuarios([FromQuery] Filtro filtro)
         {
             var response = await _usuario.ObtenerUsuarios(filtro);
 
@@ -40,7 +41,7 @@ namespace AgroTrace.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Response>> ObtenerUsuariosId(int id)
         {
-            var response = await _usuario.ObtenerUsuariosId(id);
+            var response = await _usuario.ObtenerUsuarioId(id);
 
             if (!response.Successful)
             {
@@ -55,7 +56,7 @@ namespace AgroTrace.Controllers
 
         [Authorize(Roles = "Administrador")]
         [HttpPost("AgregarUsuario")]
-        public async Task <ActionResult<Response<AgregarUsuarioResponse>>> AgregarUsuario(AgregarUsuarioRequest request)
+        public async Task<ActionResult<Response<AgregarUsuarioResponse>>> AgregarUsuario(AgregarUsuarioRequest request)
         {
             var response = await _usuario.AgregarUsuario(request);
             if (!response.Successful)
@@ -68,35 +69,12 @@ namespace AgroTrace.Controllers
         [Authorize(Roles = "Administrador")]
         [HttpPut("ActualizarUsuario")]
         public async Task<ActionResult<Response<ActualizarUsuarioResponse>>> ActualizarUsuario(int id, ActualizarUsuarioRequest request)
-        { 
-           var response = await _usuario.ActualizarUsuario(id, request);
+        {
+            var response = await _usuario.ActualizarUsuario(id, request);
             if (!response.Successful)
                 return BadRequest(response);
             return Ok(response);
         }
 
-        [AllowAnonymous]
-        [HttpPost("Login")]
-        public async Task<ActionResult<Response<LoginResponse>>> LoguearUsuario([FromBody] LoginRequest request)
-        {
-            var response = await _usuario.LoguearUsuario(request.Username, request.Password);
-
-            if (!response.Successful)
-                return Unauthorized(response);
-
-            return Ok(response);
-        }
-
-        [Authorize(Roles = "Administrador,Usuario")]
-        [HttpPost("RefreshToken")]
-        public async Task<ActionResult<Response<LoginResponse>>> RefreshToken([FromBody] RefreshRequest request)
-        {
-            var response = await _tokenService.RefreshToken(request.RefreshToken);
-
-            if (!response.Successful)
-                return Unauthorized(response);
-
-            return Ok(response);
-        }
     }
 }
