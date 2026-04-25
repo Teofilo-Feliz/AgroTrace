@@ -3,10 +3,8 @@ using AgroTrace.Aplication.Helpers;
 using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Aplication.Options;
 using AgroTrace.Domain.Entities;
-using AgroTrace.Infrastructure.Data;
 using AgroTrace.Infrastructure.PatronRepository.RefreshTokenRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AgroTrace.Aplication.Service

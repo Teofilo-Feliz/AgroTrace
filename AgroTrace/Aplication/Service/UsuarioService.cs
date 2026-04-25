@@ -2,11 +2,9 @@
 using AgroTrace.Aplication.Helpers;
 using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
-using AgroTrace.Infrastructure.Data;
 using AgroTrace.Infrastructure.PatronRepository.GenericRepository;
 using AgroTrace.Infrastructure.PatronRepository.UsuarioRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
-using Microsoft.EntityFrameworkCore;
 
 
 

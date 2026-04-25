@@ -1,9 +1,8 @@
 ﻿using AgroTrace.Aplication.DTO;
-using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Domain.Entities;
 using FluentValidation;
 
-namespace AgroTrace.Aplication.Validators.Animal
+namespace AgroTrace.Aplication.Validators.ValidationAnimal
 {
     public class AgregarAnimalValidator: AbstractValidator<AgregarAnimalesRequest>
     {

@@ -3,6 +3,7 @@ using AgroTrace.Aplication.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.WebSockets;
 
 namespace AgroTrace.Controllers
 {
@@ -36,15 +37,24 @@ namespace AgroTrace.Controllers
         }
 
 
-
-
-
-
         [Authorize(Roles = "Administrador")]
         [HttpPost("AgregarAnimal")]
         public async Task<ActionResult<Response<AgregarAnimalesResponse>>> AgregarAnimal(AgregarAnimalesRequest request)
         {
             var response = await _Animal.AgregarAnimal(request);
+            if (!response.Successful)
+                return BadRequest(response);
+
+            return Ok(response);
+
+        }
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPut("actualizarAnimal")]
+
+        public async Task<ActionResult<Response<ActualizarAnimalResponse>>> ActualizarAnimal([FromQuery]int id, ActualizarAnimalRequest request)
+        {
+            var response = await _Animal.ActualizarAnimal(id, request);
             if (!response.Successful)
                 return BadRequest(response);
 

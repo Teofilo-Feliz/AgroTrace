@@ -1,0 +1,20 @@
+﻿namespace AgroTrace.Aplication.DTO
+{
+    public class ActualizarAnimalResponse
+    {
+        public int Id { get; set; }
+        public string Codigo { get; set; }
+        public string Nombre { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
+        public string Sexo { get; set; } = string.Empty;
+        public decimal Peso { get; set; }
+        public int FincaId { get; set; }
+        public int TipoAnimalId { get; set; }
+        public int RazaId { get; set; }
+        public int EstadoAnimalId { get; set; }
+        public DateTime? FechaModificacion { get; set; }
+        public string UsuarioModificacion { get; set; }
+        public bool Activo { get; set; }
+       
+    }
+}

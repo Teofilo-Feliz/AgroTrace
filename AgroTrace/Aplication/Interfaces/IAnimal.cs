@@ -6,6 +6,7 @@ namespace AgroTrace.Aplication.Interfaces
     {
         Task<Response<AgregarAnimalesResponse>> AgregarAnimal(AgregarAnimalesRequest animal);
         Task<Response<ObtenerAnimalResponse>> ObtenerAnimales(FiltroAnimal filtro);
+        Task<Response<ActualizarAnimalResponse>> ActualizarAnimal(int id,ActualizarAnimalRequest animal);
 
     }
 }

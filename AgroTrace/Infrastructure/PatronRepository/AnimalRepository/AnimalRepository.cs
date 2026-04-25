@@ -60,12 +60,25 @@ namespace AgroTrace.Infrastructure.PatronRepository.AnimalRepository
              .AnyAsync(a => a.Codigo == codigo && a.FincaId == fincaId);
         }
 
+        public async Task <bool> ExisteCodigoActualizar (string codigo, int fincaId, int id)
+        {
+            return await _context.Animales
+                  .AnyAsync(a => a.Codigo == codigo
+                   && a.FincaId == fincaId
+                   && a.Id != id);
+        }
+
 
         public async Task AgregarAnimal(Animal animal)
         {
             await _context.Animales.AddAsync(animal);
 
         }
+
+        public async Task <Animal?> ActualizarAnimal (int id)
+        {
+            return await _context.Animales.FirstOrDefaultAsync(a => a.Id == id);
+        } 
 
     }
 }

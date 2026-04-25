@@ -7,6 +7,8 @@ namespace AgroTrace.Infrastructure.PatronRepository.AnimalRepository
     {
         Task<(List<Animal>, int)> ObtenerAnimales(FiltroAnimal filtro);
         Task<bool> ExisteCodigo(string codigo, int fincaId);
+        Task<bool> ExisteCodigoActualizar(string codigo, int fincaId, int id);
         Task AgregarAnimal (Animal animal);
+        Task<Animal?> ActualizarAnimal(int id); 
     }
 }

@@ -1,17 +1,10 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Interfaces;
-using AgroTrace.Aplication.Validators;
-using AgroTrace.Aplication.Validators.Animal;
 using AgroTrace.Aplication.Validators.ValidationAnimal;
 using AgroTrace.Domain.Entities;
-using AgroTrace.Infrastructure.Data;
 using AgroTrace.Infrastructure.PatronRepository.AnimalRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
-
-
 
 namespace AgroTrace.Aplication.Service
 {
@@ -21,14 +14,16 @@ namespace AgroTrace.Aplication.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly AgregarAnimalValidator _validator;
         private readonly MetodosValidacion _metodos;
+        private readonly IValidationService _validation;
 
-        public AnimalServices(IAnimalRepository animalRepository, AgregarAnimalValidator validator, MetodosValidacion metodos, IUnitOfWork unitOfWork)
+        public AnimalServices(IAnimalRepository animalRepository, AgregarAnimalValidator validator, MetodosValidacion metodos,
+            IUnitOfWork unitOfWork, IValidationService validation)
         {
             _animalRepository = animalRepository;
             _unitOfWork = unitOfWork;
             _validator = validator;
             _metodos = metodos;
-
+            _validation = validation;
         }
 
 
@@ -163,6 +158,95 @@ namespace AgroTrace.Aplication.Service
                 response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
 
                 return response;
+            }
+        }
+
+        public async Task<Response<ActualizarAnimalResponse>> ActualizarAnimal(int id, ActualizarAnimalRequest animal)
+        {
+            var response = new Response<ActualizarAnimalResponse>();
+            var errores = new List<string>();
+
+            try
+            {
+
+                try
+                {
+                    await _validation.ValidateAsync(animal);
+                }
+                catch (FluentValidation.ValidationException ex)
+                {
+                    errores.AddRange(ex.Errors.Select(e => e.ErrorMessage));
+                }
+
+                var entity = await _animalRepository.ActualizarAnimal(id);
+
+                if (entity == null)
+                {
+                    errores.Add($"Animal con Id {id} no encontrado");
+                   
+                }
+                if (animal.FechaNacimiento == null)
+                {
+                    errores.Add  ("La fecha de nacimiento es obligatoria");
+                }
+
+                var existeCodigo = await _animalRepository.ExisteCodigoActualizar(animal.Codigo, animal.FincaId, id);
+                    
+                if (existeCodigo)
+                {
+                    errores.Add($"Este codigo {animal.Codigo} ya existe en la finca {animal.FincaId}");
+                }
+
+                if (errores.Any())
+                {
+                    response.Successful = false;
+                    response.Message = "Errores de validaciones";
+                    response.Errors = errores;
+                    return response;
+                }
+
+                entity.Codigo = animal.Codigo.Trim();
+                entity.Nombre = animal.Nombre.Trim();
+                entity.FechaNacimiento = animal.FechaNacimiento.Value;
+                entity.Sexo = animal.Sexo;
+                entity.Peso = animal.Peso;
+                entity.FincaId= animal.FincaId;
+                entity.TipoAnimalId = animal.TipoAnimalId;
+                entity.RazaId = animal.RazaId;
+                entity.EstadoAnimalId = animal.EstadoAnimalId;
+                entity.Activo = animal.Activo;
+
+                await _unitOfWork.SaveChangesAsync();
+
+                response.Successful= true;
+                response.Message = "Animal Actualizado exitosamente";
+                response.Data = new ActualizarAnimalResponse
+                {
+                    Id = entity.Id,
+                    Codigo = entity.Codigo,
+                    Nombre = entity.Nombre,
+                    FechaNacimiento = entity.FechaNacimiento,
+                    Sexo = entity.Sexo,
+                    Peso = entity.Peso,
+                    FincaId = entity.FincaId,
+                    TipoAnimalId = entity.TipoAnimalId,
+                    RazaId = entity.RazaId,
+                    EstadoAnimalId = entity.EstadoAnimalId,
+                    FechaModificacion = entity.FechaModificacion,
+                    UsuarioModificacion = entity.UsuarioModificacion,
+                    Activo = entity.Activo,
+
+                };
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Successful = false;
+                response.Message = "Error al actualizar el Animal";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+                return response;
+
             }
         }
 

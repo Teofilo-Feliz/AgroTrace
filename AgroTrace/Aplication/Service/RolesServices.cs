@@ -1,10 +1,8 @@
 ﻿using AgroTrace.Aplication.DTO;
 using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
-using AgroTrace.Infrastructure.Data;
 using AgroTrace.Infrastructure.PatronRepository.RolesRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
-using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace AgroTrace.Aplication.Service
