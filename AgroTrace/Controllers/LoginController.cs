@@ -33,7 +33,7 @@ namespace AgroTrace.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Administrador,Usuario")]
+        [AllowAnonymous]
         [HttpPost("RefreshToken")]
         public async Task<ActionResult<Response<LoginResponse>>> RefreshToken([FromBody] RefreshRequest request)
         {

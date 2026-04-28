@@ -1,30 +1,16 @@
 using AgroTrace.Aplication.DTO;
-using AgroTrace.Aplication.Helpers;
-using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Aplication.Options;
-using AgroTrace.Aplication.Service;
-using AgroTrace.Aplication.Validators;
-using AgroTrace.Aplication.Validators.Usuario;
-using AgroTrace.Aplication.Validators.ValidationAnimal;
-using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
-using AgroTrace.Infrastructure.PatronRepository.AnimalRepository;
-using AgroTrace.Infrastructure.PatronRepository.GenericRepository;
-using AgroTrace.Infrastructure.PatronRepository.RefreshTokenRepository;
-using AgroTrace.Infrastructure.PatronRepository.RolesRepository;
-using AgroTrace.Infrastructure.PatronRepository.UsuarioRepository;
-using AgroTrace.Infrastructure.UnitOfWork;
-using FluentValidation;
+using AgroTrace.Infrastructure.Extesions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -49,14 +35,14 @@ builder.Services.AddControllers()
     });
 
 
-builder.Services.AddControllers();
-
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt"));
+
 
 
 builder.Services.AddEndpointsApiExplorer();
@@ -66,9 +52,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "AgroTrace Aplication",
         Version = "v1"
-
     });
-
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -91,30 +75,15 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
 
-builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
-builder.Services.AddScoped<PasswordService>();
-builder.Services.AddScoped<JWTService>();
-builder.Services.AddScoped<IUsuario, UsuarioService>();
-builder.Services.AddScoped<ITokenGenerator, RefreshTokenService>();
-builder.Services.AddScoped<IRoles, RolesServices>();
-builder.Services.AddScoped<IUserAudi, UserAudiServices>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddValidatorsFromAssemblyContaining<AgregarUsuarioValidator>();
-builder.Services.AddScoped<IValidationService, ValidationService>();
-builder.Services.AddScoped<MetodosValidacion>();
-builder.Services.AddScoped<IAnimal, AnimalServices>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<IRolesRepository, RolesRepository>();
-builder.Services.AddScoped<IRefreshRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<IAnimalRepository, AnimalRepository>();
+
+builder.Services.AddDependencies();
+
 
 
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -150,6 +119,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -162,5 +132,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 
 app.Run();

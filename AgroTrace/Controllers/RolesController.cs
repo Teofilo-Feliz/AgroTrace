@@ -10,8 +10,6 @@ namespace AgroTrace.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-   
-
     public class RolesController : ControllerBase
     {
         private readonly IRoles _roles;
