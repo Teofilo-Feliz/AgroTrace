@@ -18,6 +18,21 @@ namespace AgroTrace.Controllers
          _finca = finca;
         }
 
+        [Authorize(Roles = "Administrador, Usuario")]
+        [HttpGet("obtenerFincas")]
+        public async Task<ActionResult<Response<FincasResponse>>> ObtenerFincas([FromQuery] Filtro filtro)
+        {
+            var response = await _finca.ObtenerFincas(filtro);
+            if (!response.Successful)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+
+
+
+
         [Authorize(Roles = "Administrador")]
         [HttpPost("agregarFinca")]
         public async Task<ActionResult<Response<AgregarFincaResponse>>> AgregarFinca(AgregarFincaRequest finca)

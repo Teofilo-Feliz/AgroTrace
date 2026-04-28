@@ -4,6 +4,8 @@ using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.PatronRepository.FincaRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace AgroTrace.Aplication.Service
 {
@@ -19,6 +21,86 @@ namespace AgroTrace.Aplication.Service
             _fincaRepository = fincaRepository;
             _validation = validation;
         }
+
+
+        public async Task<Response<FincasResponse>> ObtenerFincas(Filtro filtro)
+        {
+            var response = new Response<FincasResponse>();
+           
+
+            try
+            {
+                var (fincas, total) = await _fincaRepository.ObtenerFincas(filtro);
+
+
+
+                var data = fincas.Select(f => new FincasResponse
+                {
+                    id = f.Id,
+                    Nombre = f.Nombre,
+                    Ubicacion = f.Ubicacion,
+                    Tamaño = f.Tamaño,
+                    UsuarioPropietarioId = f.UsuarioPropietarioId,
+                    NombrePropietario = f.UsuarioPropietario.Nombre,
+                    Activo = f.Activo,
+                }).ToList();
+
+                response.Successful = true;
+                response.DataList = data;
+                response.EntityId = total;
+                response.Message = data.Any()
+                    ? "Fincas obtenidos exitosamente"
+                    : "No hay Fincas registrados";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Successful = false;
+                response.Message = "Error al obtener Fincas";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+                return response;
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public async Task<Response<AgregarFincaResponse>> AgregarFinca(AgregarFincaRequest finca)
         {

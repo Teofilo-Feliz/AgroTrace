@@ -1,4 +1,5 @@
-﻿using AgroTrace.Aplication.Interfaces;
+﻿using AgroTrace.Aplication.DTO;
+using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,39 @@ namespace AgroTrace.Infrastructure.PatronRepository.FincaRepository
         {
             _context = context;
         }
+
+        public async Task<(List<Finca>, int )> ObtenerFincas(Filtro filtro)
+        {
+            var query = _context.Fincas
+               .Include(f => f.UsuarioPropietario) 
+               .AsNoTracking()
+               .AsQueryable();
+
+            if (!string.IsNullOrEmpty(filtro.Buscar))
+            {
+                var buscar = filtro.Buscar.Trim();
+                query = query.Where(f => f.Nombre.Contains(buscar));
+            }
+
+            query = filtro.Descendente
+                ? query.OrderByDescending(r => r.Id)
+                : query.OrderBy(r => r.Id);
+            var total = await query.CountAsync();
+
+
+            var pageNumber = filtro.PageNumber <= 0 ? 1 : filtro.PageNumber;
+            var pageSize = filtro.PageSize <= 0 ? 10 : filtro.PageSize;
+
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, total);
+
+        }
+
+
 
 
         public async Task AgregarFinca(Finca finca)
