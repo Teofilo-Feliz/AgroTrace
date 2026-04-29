@@ -1,5 +1,6 @@
 ﻿using AgroTrace.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AgroTrace.Infrastructure.PatronRepository.GenericRepository
 {
@@ -25,5 +26,11 @@ namespace AgroTrace.Infrastructure.PatronRepository.GenericRepository
 
         public void Delete(T entity)
             => _db.Remove(entity);
+
+        // Saber si el producto que se ingresa existe.
+        public async Task<bool> Exists(Expression<Func<T, bool>> predicate)
+        {
+            return await _db.AnyAsync(predicate);
+        }
     }
 }

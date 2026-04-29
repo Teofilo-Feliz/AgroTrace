@@ -31,6 +31,7 @@ namespace AgroTrace.Infrastructure.Extesions
             services.AddScoped<IUserAudi, UserAudiServices>();
             services.AddScoped<IAnimal, AnimalServices>();
             services.AddScoped<IFinca, FincaServices>();
+            services.AddScoped<IEstadoAnimal, EstadoAnimalServices>();
 
             services.AddHttpContextAccessor();
 
@@ -46,6 +47,7 @@ namespace AgroTrace.Infrastructure.Extesions
             services.AddScoped<IRefreshRepository, RefreshTokenRepository>();
             services.AddScoped<IAnimalRepository, AnimalRepository>();
             services.AddScoped<IFincaRepository, FincaRepository>();
+            
 
 
             return services;
