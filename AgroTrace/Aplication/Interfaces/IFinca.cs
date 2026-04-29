@@ -6,6 +6,7 @@ namespace AgroTrace.Aplication.Interfaces
     {
         Task<Response<FincasResponse>> ObtenerFincas(Filtro filtro);
         Task<Response<AgregarFincaResponse>> AgregarFinca(AgregarFincaRequest finca);
+        Task<Response<ActualizarFincaResponse>> ActualizarFinca(ActualizarFincaRequest finca, int id);
 
 
     }

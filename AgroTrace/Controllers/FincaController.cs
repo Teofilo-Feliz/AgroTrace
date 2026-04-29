@@ -44,6 +44,18 @@ namespace AgroTrace.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Administrador")]
+        [HttpPut("actualizar")]
+
+        public async Task<ActionResult<Response<ActualizarAnimalRequest>>> ActualizarFinca(ActualizarFincaRequest finca, int id)
+        {
+            var response = await _finca.ActualizarFinca(finca, id);
+            if (!response.Successful)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
 
 
     }

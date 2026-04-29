@@ -2,10 +2,8 @@
 using AgroTrace.Aplication.Interfaces;
 using AgroTrace.Domain.Entities;
 using AgroTrace.Infrastructure.PatronRepository.FincaRepository;
+using AgroTrace.Infrastructure.PatronRepository.GenericRepository;
 using AgroTrace.Infrastructure.UnitOfWork;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System;
 
 namespace AgroTrace.Aplication.Service
 {
@@ -14,12 +12,14 @@ namespace AgroTrace.Aplication.Service
         private IFincaRepository _fincaRepository;
         private IUnitOfWork _unitOfWork;
         private readonly IValidationService _validation;
+        private readonly IRepository<Finca> _repository;
 
-        public FincaServices(IUnitOfWork unitOfWork, IFincaRepository fincaRepository, IValidationService validation)
+        public FincaServices(IUnitOfWork unitOfWork, IFincaRepository fincaRepository, IValidationService validation, IRepository<Finca> repository )
         {
             _unitOfWork = unitOfWork;
             _fincaRepository = fincaRepository;
             _validation = validation;
+            _repository = repository;
         }
 
 
@@ -66,39 +66,6 @@ namespace AgroTrace.Aplication.Service
 
 
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -164,7 +131,7 @@ namespace AgroTrace.Aplication.Service
                     Ubicacion = entity.Ubicacion,
                     Tamaño = entity.Tamaño,
                     UsuarioPropiedadId = entity.UsuarioPropietarioId,
-                    UsuarioPropiedadNombre = nombreUsuario,
+                    UsuarioPropiedadNombre = nombreUsuario!,
                     activo = entity.Activo,
                 };
 
@@ -185,5 +152,82 @@ namespace AgroTrace.Aplication.Service
 
         }
 
+        public async Task<Response<ActualizarFincaResponse>> ActualizarFinca(ActualizarFincaRequest finca, int id)
+        {
+            var response = new Response<ActualizarFincaResponse>();
+            var errores = new List<string>();
+
+            try
+            {
+                try
+                {
+                    await _validation.ValidateAsync(finca);
+                }
+                catch (FluentValidation.ValidationException ex)
+                {
+                    errores.AddRange(ex.Errors.Select(e => e.ErrorMessage));
+                }
+
+                var entity = await _repository.GetByIdAsync(id);
+
+                if (entity == null)
+                {
+                    errores.Add($"Finca con id {id} no encontrada");
+                }
+               
+                var fincaExiste = await _fincaRepository.FincaExiste(finca.Nombre, finca.UsuarioPropietarioId);
+
+                if (fincaExiste)
+                {
+                    errores.Add("Esta finca ya existe bajo este usuario propietario");
+                }
+
+
+                if (errores.Any())
+                {
+                    response.Successful = false;
+                    response.Message = "Errores de validación";
+                    response.Errors = errores;
+                    return response;
+                }
+
+                entity.Nombre = finca.Nombre;
+                entity.Ubicacion = finca.Ubicacion;
+                entity.Tamaño = finca.Tamaño;
+                entity.UsuarioPropietarioId = finca.UsuarioPropietarioId;
+                entity.Activo = finca.Activo;
+
+                _repository.Update(entity);
+                await _unitOfWork.SaveChangesAsync();
+
+                var nombreUsuario = await _fincaRepository
+                   .ObtenerNombreUsuarioPropiedad(finca.UsuarioPropietarioId);
+
+                response.Successful = true;
+                response.Message = "Finca actualizada correctamente";
+                response.Data = new ActualizarFincaResponse
+                {
+                    Id = entity.Id,
+                    Nombre = entity.Nombre,
+                    Ubicacion = entity.Ubicacion,
+                    Tamaño = entity.Tamaño,
+                    UsuarioPropietarioId = entity.UsuarioPropietarioId,
+                    NombrePropietario = nombreUsuario!,
+                    UsuarioModificacion = entity.UsuarioModificacion!,
+                    FechaModificacion = entity.FechaModificacion,
+                    Activo = entity.Activo
+                };
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Successful = false;
+                response.Message = "Error al actualizar la finca";
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
+                return response;
+            }
+        }
     }
-}
+ }
+
