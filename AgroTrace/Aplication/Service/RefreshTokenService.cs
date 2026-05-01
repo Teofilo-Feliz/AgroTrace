@@ -17,7 +17,8 @@ namespace AgroTrace.Aplication.Service
         private readonly IConfiguration _configuration;
         private readonly JwtOptions _jwtOptions;
 
-        public RefreshTokenService(IRefreshRepository refreshRepository, JWTService jwt, IOptions<JwtOptions> options, IConfiguration configuration, IUnitOfWork unitOfWork)
+        public RefreshTokenService(IRefreshRepository refreshRepository, JWTService jwt, IOptions<JwtOptions> options, 
+            IConfiguration configuration, IUnitOfWork unitOfWork)
         {
             _refreshRepository = refreshRepository;
             _jwt = jwt;

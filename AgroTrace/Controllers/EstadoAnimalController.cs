@@ -20,8 +20,25 @@ namespace AgroTrace.Controllers
         }
 
         [Authorize(Roles = "Administrador")]
-        [HttpPost("agregarEstado")]
+        [HttpGet("obtenerEstadoAnimal")]
+       public async Task<ActionResult<Response<EstadoAnimalResponse>>> ObtenerEstadoAnimal([FromQuery]Filtro filtro)
+       {
+            var response = await _estadoAnimal.ObtenerEstadoAnimal(filtro);
+            if (!response.Successful)
+                return BadRequest (response);
 
+            return Ok(response);
+
+               
+
+        }
+
+
+
+
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPost("agregarEstado")]
         public async Task<ActionResult<Response<AgregarEstadoAnimalResponse>>> AgregarEstadoAnimal(AgregarEstadoAnimalRequest request)
         {
             var response = await _estadoAnimal.AgregarEstadoAnimal(request);
